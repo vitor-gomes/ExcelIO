@@ -53,7 +53,7 @@ public abstract class AbstractExcelImporter {
     private InputStream uploadedStream;
     protected boolean success;
     protected boolean success100percent = true;
-    protected List errors = new ArrayList<String>();
+    protected List<String> errors = new ArrayList<>();
     private TYPE type;
     
     public enum TYPE {
@@ -88,7 +88,6 @@ public abstract class AbstractExcelImporter {
         
         if (fileName.length() > 0) {
             try{
-                montaPasta(fileName);
                 String path = dirPath + File.separator + fileName;
 
                 uploadedStream = fileItem.getInputStream();
@@ -304,14 +303,6 @@ public abstract class AbstractExcelImporter {
         }
     }
     
-    private void montaPasta(String parEndereco) {
-        File f = new File(parEndereco);
-
-        if (!f.exists()) {
-            f.mkdirs();
-        }
-    }
-
     /**
      * Método que indica se o upload do arquivo Excel foi feito corretamente
      * <p>
