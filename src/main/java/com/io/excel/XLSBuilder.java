@@ -14,7 +14,7 @@ import org.apache.poi.ss.usermodel.Workbook;
  *
  * @author Vitor
  */
-public class XLSBuilder extends Builder {
+class XLSBuilder extends Builder {
     
     private HSSFWorkbook hssfw;
 
