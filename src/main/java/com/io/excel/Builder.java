@@ -32,7 +32,7 @@ import org.apache.poi.ss.usermodel.Workbook;
  *
  * @author Vitor
  */
-public abstract class Builder {
+abstract class Builder {
     
     public abstract void createWorkbook();
     public abstract Workbook getWorkbook();

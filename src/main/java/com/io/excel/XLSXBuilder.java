@@ -8,7 +8,6 @@ package com.io.excel;
 import java.sql.ResultSet;
 import java.util.List;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -16,45 +15,35 @@ import org.apache.poi.xssf.usermodel.XSSFWorkbook;
  *
  * @author Vitor
  */
-public class XLSXBuilder extends Builder {
+class XLSXBuilder extends Builder {
     
-    private XSSFWorkbook xssfw;
+    private SXSSFWorkbook sxssfw;
 
     @Override
     public void createWorkbook() {
-        this.xssfw = new XSSFWorkbook();
+        this.sxssfw = new SXSSFWorkbook(new XSSFWorkbook());
     }
 
     @Override
     public void addSheet(String sheetName, ResultSet rs) {
-        SXSSFWorkbook sxssfw = new SXSSFWorkbook(xssfw);
-        SXSSFSheet sheet = sxssfw.createSheet(sheetName);
-        sheet.setRandomAccessWindowSize(150);
         try {
-            super.writeOnSheet(rs, xssfw, sheet);
+            super.writeOnSheet(rs, sxssfw, sxssfw.createSheet(sheetName));
         } catch (Exception ex) {
             ex.printStackTrace();
-        } finally {
-            sxssfw.dispose();
         }
     }
 
     @Override
     public <T> void addSheet(String sheetName, List<T> list) {
-        SXSSFWorkbook sxssfw = new SXSSFWorkbook(xssfw);
-        SXSSFSheet sheet = sxssfw.createSheet(sheetName);
-        sheet.setRandomAccessWindowSize(150);
         try {
-            super.writeOnSheet(list, xssfw, sheet);
+            super.writeOnSheet(list, sxssfw, sxssfw.createSheet(sheetName));
         } catch (Exception ex) {
             ex.printStackTrace();
-        } finally {
-            sxssfw.dispose();
-        }
+        } 
     }
 
     @Override
     public Workbook getWorkbook() {
-        return xssfw;
+        return sxssfw;
     }
 }
