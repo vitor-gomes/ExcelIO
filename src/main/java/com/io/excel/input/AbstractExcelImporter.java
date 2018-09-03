@@ -37,7 +37,7 @@ public abstract class AbstractExcelImporter {
     protected Map<Object, Object> m_map = new HashMap();
     
     protected int headerSize;
-    protected static String dirPath;
+    protected static String outputDirPath;
     
     private static final int F_ROWCACHE = 100;
     private static final int F_BUFFERSIZE = 2048;
@@ -60,19 +60,31 @@ public abstract class AbstractExcelImporter {
         HSSF_WORKBOOK, XSSF_WORKBOOK, INVALID
     }
     
-    public AbstractExcelImporter(Object fileObject, String dirPath, int headersize) {
-        this(fileObject, dirPath, headersize, F_ROWCACHE, F_BUFFERSIZE);
+    public AbstractExcelImporter(String path, int headersize) {
+        this(null, null, headersize, F_ROWCACHE, F_BUFFERSIZE);
+        this.file = new File(path);
     }
     
-    public AbstractExcelImporter(Object fileObject, String dirPath, int headersize, int bufferSize, int rowCache) {
+    public AbstractExcelImporter(String path, int headersize, int bufferSize, int rowCache) {
+        this(null, null, headersize, rowCache, bufferSize);
+        this.file = new File(path);
+    }
+    
+    public AbstractExcelImporter(Object fileObject, String outputDirPath, int headersize) {
+        this(fileObject, outputDirPath, headersize, F_ROWCACHE, F_BUFFERSIZE);
+    }
+    
+    public AbstractExcelImporter(Object fileObject, String outputDirPath, int headersize, int bufferSize, int rowCache) {
         this.rowCache = rowCache;
         this.bufferSize = bufferSize;
         this.headerSize = headersize;
         this.fileObject = fileObject;
-        this.dirPath = dirPath;
+        this.outputDirPath = outputDirPath;
         try {
-            realizaUpload();
-            success = true;
+            if (fileObject != null & outputDirPath != null) {
+                realizaUpload();
+                success = true;
+            }
         } catch (Exception e) {
             e.printStackTrace();
             success = false;
@@ -88,7 +100,7 @@ public abstract class AbstractExcelImporter {
         
         if (fileName.length() > 0) {
             try{
-                String path = dirPath + File.separator + fileName;
+                String path = outputDirPath + File.separator + fileName;
 
                 uploadedStream = fileItem.getInputStream();
 
@@ -169,6 +181,11 @@ public abstract class AbstractExcelImporter {
     public boolean importa() throws Exception {
         
         try {
+            
+            if (type == null) {
+                InputStream inputStream = new FileInputStream(file);
+                type = defineType(inputStream);
+            }
             
             switch(type) {
                 case HSSF_WORKBOOK:
