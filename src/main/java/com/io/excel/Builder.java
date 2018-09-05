@@ -96,9 +96,11 @@ abstract class Builder {
                         cell.setCellStyle(dateStyle);
                         break;
                     default:
-                        Object o = rs.getObject(i);
-                        cell.setCellValue(o.toString());
-                        break;
+                        if(!(object instanceof java.util.Collection)) {
+                            Object o = rs.getObject(i);
+                            cell.setCellValue(o.toString());
+                            break;
+                        }
                 }
             }
         }

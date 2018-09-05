@@ -41,7 +41,7 @@ class XLSXBuilder extends Builder {
             ex.printStackTrace();
         } 
     }
-
+    
     @Override
     public Workbook getWorkbook() {
         return sxssfw;
