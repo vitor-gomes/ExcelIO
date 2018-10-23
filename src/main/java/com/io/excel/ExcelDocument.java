@@ -59,4 +59,21 @@ public class ExcelDocument {
         this.getByteArrayOutputStream().writeTo(outputStream);   
         return outputStream;
     }
+
+    public String getNome() {
+        return nome;
+    }
+
+    public void setNome(String nome) {
+        this.nome = nome;
+    }
+
+    public FileType getType() {
+        return type;
+    }
+
+    public void setType(FileType type) {
+        this.type = type;
+    }
+    
 }
