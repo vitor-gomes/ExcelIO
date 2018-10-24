@@ -34,6 +34,9 @@ import org.apache.poi.ss.usermodel.Workbook;
  */
 abstract class Builder {
     
+    private CellStyle header;
+    private CellStyle dateStyle;
+    private CellStyle doubleStyle;
     public abstract void createWorkbook();
     public abstract Workbook getWorkbook();
     
@@ -41,32 +44,17 @@ abstract class Builder {
     public abstract <T> void addSheet(String sheetName, List<T> list);
         
     protected void writeOnSheet(ResultSet rs, Workbook workbook, Sheet sheet) throws Exception {
+        this.setStyles(workbook);
         int rownum = 0;
         int cellnum = 0;
         Row row = sheet.createRow(rownum++);
-
-        CellStyle header = workbook.createCellStyle();
-        header.setBorderBottom(BorderStyle.THIN);
-        header.setBorderLeft(BorderStyle.THIN);
-        header.setBorderRight(BorderStyle.THIN);
-        header.setBorderTop(BorderStyle.THIN);
-        header.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-        header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-
+        
         ResultSetMetaData rsmd = rs.getMetaData();
         for (int i = 1; i <= rsmd.getColumnCount(); i++) {
             Cell cell = row.createCell(cellnum++);
             cell.setCellValue(rsmd.getColumnName(i));
             cell.setCellStyle(header);
         }
-
-        DataFormat fmt = workbook.createDataFormat();
-
-        CellStyle dateStyle = workbook.createCellStyle();
-        dateStyle.setDataFormat(fmt.getFormat("m/d/yy"));
-
-        CellStyle doubleStyle = workbook.createCellStyle();
-        doubleStyle.setDataFormat(fmt.getFormat("0.00"));
 
         while (rs.next()) {
             Row r = sheet.createRow(rownum++);
@@ -110,6 +98,8 @@ abstract class Builder {
         if (list == null || list.isEmpty()) {
             return;
         }
+        this.setStyles(workbook);
+        
         Field[] fields = list.get(0).getClass().getDeclaredFields();
         int rownum = 0, cellnum = 0;
         Row row = sheet.createRow(rownum++);
@@ -123,11 +113,12 @@ abstract class Builder {
                 } else {
                     cell.setCellValue(column.name());
                 }
+                cell.setCellStyle(header);
             } catch (java.lang.NoClassDefFoundError e) {
                 cell.setCellValue(f.getName());
             }
         }
-
+                
         NumberFormat numberFormat = NumberFormat.getInstance(new Locale("pt", "BR"));
         for (T obj : list) {
             cellnum = 0;
@@ -148,6 +139,7 @@ abstract class Builder {
                             String pattern = column.columnDefinition();
                             SimpleDateFormat frmt = new SimpleDateFormat(pattern);
                             c.setCellValue(frmt.format(o));
+                            c.setCellStyle(dateStyle);
                             break;
                         case "java.lang.Integer":
                             c.setCellValue(numberFormat.format(o));
@@ -164,4 +156,21 @@ abstract class Builder {
         }
     }
     
+    private void setStyles(Workbook workbook) {
+        header = workbook.createCellStyle();
+        header.setBorderBottom(BorderStyle.THIN);
+        header.setBorderLeft(BorderStyle.THIN);
+        header.setBorderRight(BorderStyle.THIN);
+        header.setBorderTop(BorderStyle.THIN);
+        header.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        
+        DataFormat fmt = workbook.createDataFormat();
+        
+        dateStyle = workbook.createCellStyle();
+        dateStyle.setDataFormat(fmt.getFormat("m/d/yy"));
+        
+        doubleStyle = workbook.createCellStyle();
+        doubleStyle.setDataFormat(fmt.getFormat("0.00"));
+    }
 }
