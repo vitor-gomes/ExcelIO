@@ -34,27 +34,53 @@ import org.apache.poi.ss.usermodel.Workbook;
  */
 abstract class Builder {
     
-    private CellStyle header;
-    private CellStyle dateStyle;
-    private CellStyle doubleStyle;
+    protected CellStyle header;
     public abstract void createWorkbook();
     public abstract Workbook getWorkbook();
     
+    public abstract CellStyle getHeader();
+    
     public abstract void addSheet(String sheetName, ResultSet rs);    
     public abstract <T> void addSheet(String sheetName, List<T> list);
+
+    public void setHeader(CellStyle header) {
+        this.header = header;
+    }
+    
+    protected CellStyle defaultHeader(Workbook workbook) {
+        CellStyle defaultHeader = workbook.createCellStyle();
+        defaultHeader.setBorderBottom(BorderStyle.THIN);
+        defaultHeader.setBorderLeft(BorderStyle.THIN);
+        defaultHeader.setBorderRight(BorderStyle.THIN);
+        defaultHeader.setBorderTop(BorderStyle.THIN);
+        defaultHeader.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+        defaultHeader.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        return defaultHeader;
+    }
         
     protected void writeOnSheet(ResultSet rs, Workbook workbook, Sheet sheet) throws Exception {
-        this.setStyles(workbook);
         int rownum = 0;
         int cellnum = 0;
         Row row = sheet.createRow(rownum++);
         
+        if(header == null) {
+            setHeader(defaultHeader(workbook));
+        }
+
         ResultSetMetaData rsmd = rs.getMetaData();
         for (int i = 1; i <= rsmd.getColumnCount(); i++) {
             Cell cell = row.createCell(cellnum++);
             cell.setCellValue(rsmd.getColumnName(i));
             cell.setCellStyle(header);
         }
+
+        DataFormat fmt = workbook.createDataFormat();
+
+        CellStyle dateStyle = workbook.createCellStyle();
+        dateStyle.setDataFormat(fmt.getFormat("m/d/yy"));
+
+        CellStyle doubleStyle = workbook.createCellStyle();
+        doubleStyle.setDataFormat(fmt.getFormat("0.00"));
 
         while (rs.next()) {
             Row r = sheet.createRow(rownum++);
@@ -97,9 +123,10 @@ abstract class Builder {
     protected <T> void writeOnSheet(List<T> list, Workbook workbook, Sheet sheet) throws Exception {
         if (list == null || list.isEmpty()) {
             return;
+        }        
+        if(header == null) {
+            setHeader(defaultHeader(workbook));
         }
-        this.setStyles(workbook);
-        
         Field[] fields = list.get(0).getClass().getDeclaredFields();
         int rownum = 0, cellnum = 0;
         Row row = sheet.createRow(rownum++);
@@ -118,7 +145,7 @@ abstract class Builder {
                 cell.setCellValue(f.getName());
             }
         }
-                
+
         NumberFormat numberFormat = NumberFormat.getInstance(new Locale("pt", "BR"));
         for (T obj : list) {
             cellnum = 0;
@@ -139,7 +166,6 @@ abstract class Builder {
                             String pattern = column.columnDefinition();
                             SimpleDateFormat frmt = new SimpleDateFormat(pattern);
                             c.setCellValue(frmt.format(o));
-                            c.setCellStyle(dateStyle);
                             break;
                         case "java.lang.Integer":
                             c.setCellValue(numberFormat.format(o));
@@ -156,21 +182,4 @@ abstract class Builder {
         }
     }
     
-    private void setStyles(Workbook workbook) {
-        header = workbook.createCellStyle();
-        header.setBorderBottom(BorderStyle.THIN);
-        header.setBorderLeft(BorderStyle.THIN);
-        header.setBorderRight(BorderStyle.THIN);
-        header.setBorderTop(BorderStyle.THIN);
-        header.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-        header.setFillPattern(FillPatternType.SOLID_FOREGROUND);
-        
-        DataFormat fmt = workbook.createDataFormat();
-        
-        dateStyle = workbook.createCellStyle();
-        dateStyle.setDataFormat(fmt.getFormat("m/d/yy"));
-        
-        doubleStyle = workbook.createCellStyle();
-        doubleStyle.setDataFormat(fmt.getFormat("0.00"));
-    }
 }

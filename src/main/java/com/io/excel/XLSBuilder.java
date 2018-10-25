@@ -8,6 +8,7 @@ package com.io.excel;
 import java.sql.ResultSet;
 import java.util.List;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Workbook;
 
 /**
@@ -44,5 +45,13 @@ class XLSBuilder extends Builder {
     @Override
     public Workbook getWorkbook() {
         return hssfw;
+    }
+
+    @Override
+    public CellStyle getHeader() {
+        if(super.header == null) {
+            super.setHeader(super.defaultHeader(hssfw));
+        }
+        return super.header;
     }
 }
