@@ -12,6 +12,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.ResultSet;
 import java.util.List;
+import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
 
 /**
  *
@@ -47,6 +49,14 @@ public class ExcelDocument {
         builder.addSheet(sheetName, list);
     }
     
+    public CellStyle getHeader() {
+        return builder.getHeader();
+    }
+    
+    public Font getFont() {
+        return builder.getFont();
+    }
+        
     public ByteArrayOutputStream getByteArrayOutputStream() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         builder.getWorkbook().write(baos);

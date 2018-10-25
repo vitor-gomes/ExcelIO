@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.util.List;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Workbook;
 
 /**
@@ -50,8 +51,13 @@ class XLSBuilder extends Builder {
     @Override
     public CellStyle getHeader() {
         if(super.header == null) {
-            super.setHeader(super.defaultHeader(hssfw));
+            super.header = super.defaultHeader(hssfw);
         }
         return super.header;
+    }
+
+    @Override
+    public Font getFont() {
+        return hssfw.createFont();
     }
 }

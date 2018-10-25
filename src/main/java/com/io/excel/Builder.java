@@ -20,6 +20,7 @@ import javax.persistence.Column;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
+import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormat;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -38,14 +39,12 @@ abstract class Builder {
     public abstract void createWorkbook();
     public abstract Workbook getWorkbook();
     
+    public abstract Font getFont();
     public abstract CellStyle getHeader();
     
     public abstract void addSheet(String sheetName, ResultSet rs);    
     public abstract <T> void addSheet(String sheetName, List<T> list);
 
-    public void setHeader(CellStyle header) {
-        this.header = header;
-    }
     
     protected CellStyle defaultHeader(Workbook workbook) {
         CellStyle defaultHeader = workbook.createCellStyle();
@@ -64,7 +63,7 @@ abstract class Builder {
         Row row = sheet.createRow(rownum++);
         
         if(header == null) {
-            setHeader(defaultHeader(workbook));
+            header = defaultHeader(workbook);
         }
 
         ResultSetMetaData rsmd = rs.getMetaData();
@@ -125,7 +124,7 @@ abstract class Builder {
             return;
         }        
         if(header == null) {
-            setHeader(defaultHeader(workbook));
+            header = defaultHeader(workbook);
         }
         Field[] fields = list.get(0).getClass().getDeclaredFields();
         int rownum = 0, cellnum = 0;
