@@ -15,10 +15,8 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 import javax.persistence.Column;
 import org.apache.poi.ss.usermodel.BorderStyle;
@@ -164,7 +162,17 @@ abstract class Builder {
 
         formatHeader(sheet);
         
-        NumberFormat numberFormat = NumberFormat.getInstance(new Locale("pt", "BR"));
+        DataFormat fmt = workbook.createDataFormat();
+        
+        CellStyle textStyle = workbook.createCellStyle();
+        textStyle.setDataFormat(fmt.getFormat("@"));
+        
+        CellStyle dateStyle = workbook.createCellStyle();
+        dateStyle.setDataFormat(fmt.getFormat("m/d/yy"));
+
+        CellStyle doubleStyle = workbook.createCellStyle();
+        doubleStyle.setDataFormat(fmt.getFormat("0.00"));
+        
         for (T obj : list) {
             cellnum = 0;
             Row r = sheet.createRow(rownum++);
@@ -184,15 +192,20 @@ abstract class Builder {
                             String pattern = column.columnDefinition();
                             SimpleDateFormat frmt = new SimpleDateFormat(pattern);
                             c.setCellValue(frmt.format(o));
+                            c.setCellStyle(dateStyle);
                             break;
                         case "java.lang.Integer":
-                            c.setCellValue(numberFormat.format(o));
+                            Integer i = (Integer) o;
+                            c.setCellValue(i);
                             break;
                         case "java.lang.Double":
-                            c.setCellValue(numberFormat.format(o));
+                            Double d = (Double) o;
+                            c.setCellValue(d);
+                            c.setCellStyle(doubleStyle);
                             break;
                         default:
                             c.setCellValue(o.toString());
+                            c.setCellStyle(textStyle);
                             break;
                     }
                 }
