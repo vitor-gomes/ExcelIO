@@ -5,6 +5,7 @@
  */
 package com.io.excel;
 
+import com.io.excel.utils.PixelUtil;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -14,8 +15,9 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.text.NumberFormat;
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import javax.persistence.Column;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -28,6 +30,7 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
 
 /**
  *
@@ -36,6 +39,13 @@ import org.apache.poi.ss.usermodel.Workbook;
 abstract class Builder {
     
     protected CellStyle header;
+    
+    protected Boolean autosizeAll = false;
+    protected Boolean autosizeHeader = false;
+    protected List<Integer> autosizableColumns = new ArrayList();
+    protected Map<Integer, Integer> columnsWidth = new HashMap();
+    protected Integer headerHeight = 0; // 0 == default
+    
     public abstract void createWorkbook();
     public abstract Workbook getWorkbook();
     
@@ -60,12 +70,13 @@ abstract class Builder {
     protected void writeOnSheet(ResultSet rs, Workbook workbook, Sheet sheet) throws Exception {
         int rownum = 0;
         int cellnum = 0;
+        
         Row row = sheet.createRow(rownum++);
         
         if(header == null) {
             header = defaultHeader(workbook);
         }
-
+        
         ResultSetMetaData rsmd = rs.getMetaData();
         for (int i = 1; i <= rsmd.getColumnCount(); i++) {
             Cell cell = row.createCell(cellnum++);
@@ -73,6 +84,8 @@ abstract class Builder {
             cell.setCellStyle(header);
         }
 
+        formatHeader(sheet);
+        
         DataFormat fmt = workbook.createDataFormat();
 
         CellStyle dateStyle = workbook.createCellStyle();
@@ -112,11 +125,13 @@ abstract class Builder {
                         if(!(object instanceof java.util.Collection)) {
                             Object o = rs.getObject(i);
                             cell.setCellValue(o.toString());
-                            break;
                         }
                 }
             }
         }
+        
+        if (autosizeAll)
+            autosize(sheet);
     }
     
     protected <T> void writeOnSheet(List<T> list, Workbook workbook, Sheet sheet) throws Exception {
@@ -129,7 +144,7 @@ abstract class Builder {
         Field[] fields = list.get(0).getClass().getDeclaredFields();
         int rownum = 0, cellnum = 0;
         Row row = sheet.createRow(rownum++);
-
+        
         for (Field f : fields) {
             Cell cell = row.createCell(cellnum++);
             try {
@@ -145,7 +160,19 @@ abstract class Builder {
             }
         }
 
-        NumberFormat numberFormat = NumberFormat.getInstance(new Locale("pt", "BR"));
+        formatHeader(sheet);
+        
+        DataFormat fmt = workbook.createDataFormat();
+        
+        CellStyle textStyle = workbook.createCellStyle();
+        textStyle.setDataFormat(fmt.getFormat("@"));
+        
+        CellStyle dateStyle = workbook.createCellStyle();
+        dateStyle.setDataFormat(fmt.getFormat("m/d/yy"));
+
+        CellStyle doubleStyle = workbook.createCellStyle();
+        doubleStyle.setDataFormat(fmt.getFormat("0.00"));
+        
         for (T obj : list) {
             cellnum = 0;
             Row r = sheet.createRow(rownum++);
@@ -165,20 +192,105 @@ abstract class Builder {
                             String pattern = column.columnDefinition();
                             SimpleDateFormat frmt = new SimpleDateFormat(pattern);
                             c.setCellValue(frmt.format(o));
+                            c.setCellStyle(dateStyle);
                             break;
                         case "java.lang.Integer":
-                            c.setCellValue(numberFormat.format(o));
+                            Integer i = (Integer) o;
+                            c.setCellValue(i);
                             break;
                         case "java.lang.Double":
-                            c.setCellValue(numberFormat.format(o));
+                            Double d = (Double) o;
+                            c.setCellValue(d);
+                            c.setCellStyle(doubleStyle);
                             break;
                         default:
                             c.setCellValue(o.toString());
+                            c.setCellStyle(textStyle);
                             break;
                     }
                 }
             }
         }
+        
+        if (autosizeAll)
+            autosize(sheet);
+    }
+    
+    private void autosize(Sheet sheet) {
+        for (int c : autosizableColumns) 
+                sheet.autoSizeColumn(c);
+    }
+    
+    private void formatHeader(Sheet sheet) {
+        Row row = sheet.getRow(0);
+        if(headerHeight != 0) 
+            row.setHeightInPoints(headerHeight);
+        
+        if (autosizeHeader || autosizeAll) {
+            int c = row.getPhysicalNumberOfCells();
+            for (int i = 0; i < c; i++) 
+                autosizableColumns.add(i);
+        } 
+        if (autosizeHeader) {
+            autosize(sheet);
+        }
+        if (!autosizeAll && sheet instanceof SXSSFSheet) {
+            SXSSFSheet sXSSFSheet = (SXSSFSheet) sheet;
+            sXSSFSheet.untrackAllColumnsForAutoSizing();
+        }
+        
+        if (!columnsWidth.isEmpty()) {
+            for (Map.Entry<Integer, Integer> columnWidth : columnsWidth.entrySet()) 
+                sheet.setColumnWidth(columnWidth.getKey(), PixelUtil.pixel2WidthUnits(columnWidth.getValue()));
+        }
+    }
+
+    public void setAutosizeHeader(boolean autosizeHeader) {
+        this.autosizeHeader = autosizeHeader;
+    }
+    
+    public boolean isAutosizeHeader() {
+        return autosizeHeader;
+    }
+    
+    public boolean isAutosizeAll() {
+        return autosizeAll;
+    }
+
+    public void setAutosizeAll(boolean autosizeAll) {
+        this.autosizeAll = autosizeAll;
+    }
+
+    public List<Integer> getAutosizableColumns() {
+        return autosizableColumns;
+    }
+
+    public void setAutosizableColumns(List<Integer> autosizableColumns) {
+        this.autosizableColumns = autosizableColumns;
+    }
+
+    public void addAutosizableColumn(int column) {
+        this.autosizableColumns.add(column);
+    }
+    
+    public Map<Integer, Integer> getColumnsWidth() {
+        return columnsWidth;
+    }
+
+    public void setColumnsWidth(Map<Integer, Integer> columnsWidth) {
+        this.columnsWidth = columnsWidth;
+    }
+    
+    public void addColumnWidth(int column, int width) {
+        this.columnsWidth.put(column, width);
+    }
+
+    public Integer getHeaderHeight() {
+        return headerHeight;
+    }
+
+    public void setHeaderHeight(Integer headerHeight) {
+        this.headerHeight = headerHeight;
     }
     
 }

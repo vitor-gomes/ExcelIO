@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.sql.ResultSet;
 import java.util.List;
+import java.util.Map;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 
@@ -56,7 +57,82 @@ public class ExcelDocument {
     public Font getFont() {
         return builder.getFont();
     }
-        
+    
+    /**
+     * Autosizes all columns by the header width.
+     * <p>
+     * Defaults to false.
+     * <p>
+     * Avoid using this and autosizeAll for marginal performance boost
+     */
+    public void autosizeHeader() {
+        builder.setAutosizeHeader(true);
+    }
+    
+    /**
+     * WARNING: This can may result in great slowdown for large sheets!
+     * <p>
+     * Autosizes all columns.
+     * <p>
+     * Defaults to false.
+     * <p>
+     * Avoid using this and autosizeAll for marginal performance boost
+     */
+    public void autosizeAll() {
+        builder.setAutosizeAll(true);
+    }
+    
+    /**
+     * WARNING: This can may result in great slowdown for large sheets!
+     * <p>
+     * Sets which columns the engine should track to Autosize.
+     * <p>
+     * @param autosizableColumns - a list of the indices of all columns to track.
+     */
+    public void setAutosizableColumns(List<Integer> autosizableColumns) {
+        builder.setAutosizableColumns(autosizableColumns);
+    }
+
+    /**
+     * WARNING: This can may result in great slowdown for large sheets!
+     * <p>
+     * Sets column to track for Autosize.
+     * <p>
+     * @param column - index of column to track.
+     */
+    public void addAutosizableColumn(int column) {
+        builder.addAutosizableColumn(column);
+    }
+    
+    /**
+     * Sets the widths (in pixels) for the desired columns
+     * <p>
+     * @param columnsWidth - Set with values for the width keys.
+     */
+    public void setColumnsWidth(Map<Integer, Integer> columnsWidth) {
+        builder.setColumnsWidth(columnsWidth);
+    }
+    
+    /**
+     * Sets the width (in pixels) of de desired column.
+     * <p>
+     * @param column
+     * @param width 
+     */
+    public void addColumnWidth(int column, int width) {
+        builder.addColumnWidth(column, width);
+    }
+    
+    /**
+     * Sets the height (in points) of the header.<p>
+     * Fallback to engine default if set to 0.
+     * 
+     * @param height 
+     */
+    public void setHeaderHeight(int height) {
+        builder.setHeaderHeight(height);
+    }
+    
     public ByteArrayOutputStream getByteArrayOutputStream() throws IOException {
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         builder.getWorkbook().write(baos);

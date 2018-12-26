@@ -5,12 +5,17 @@
  */
 package com.io.excel;
 
+import java.lang.reflect.Field;
 import java.sql.ResultSet;
 import java.util.List;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.usermodel.IgnoredErrorType;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellRangeAddress;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
 /**
@@ -38,7 +43,21 @@ class XLSXBuilder extends Builder {
     @Override
     public <T> void addSheet(String sheetName, List<T> list) {
         try {
-            super.writeOnSheet(list, sxssfw, sxssfw.createSheet(sheetName));
+            SXSSFSheet sheet = sxssfw.createSheet(sheetName);
+            
+            Field _sh = SXSSFSheet.class.getDeclaredField("_sh");
+            _sh.setAccessible(true);
+            XSSFSheet xssfsheet = (XSSFSheet)_sh.get(sheet);
+            xssfsheet.addIgnoredErrors(new CellRangeAddress(0,1048575,0,9999),IgnoredErrorType.NUMBER_STORED_AS_TEXT );
+            
+            // Adding tracking for autosizable columns for XSSF Workbooks.
+            if(super.isAutosizeAll() || super.isAutosizeHeader()) {
+                sheet.trackAllColumnsForAutoSizing();
+            } else if (!super.autosizableColumns.isEmpty()) {
+                sheet.trackColumnsForAutoSizing(super.autosizableColumns);
+            }
+            
+            super.writeOnSheet(list, sxssfw, sheet);
         } catch (Exception ex) {
             ex.printStackTrace();
         } 
