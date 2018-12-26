@@ -5,6 +5,7 @@
  */
 package com.io.excel;
 
+import com.io.excel.utils.PixelUtil;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -15,7 +16,10 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Locale;
+import java.util.Map;
 import javax.persistence.Column;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -36,6 +40,12 @@ import org.apache.poi.ss.usermodel.Workbook;
 abstract class Builder {
     
     protected CellStyle header;
+    
+    protected Boolean autosizeAll = false;
+    protected List<Integer> autosizableColumns = new ArrayList();
+    protected Map<Integer, Integer> columnsWidth = new HashMap();
+    protected Integer headerHeight = 0; // 0 == default
+    
     public abstract void createWorkbook();
     public abstract Workbook getWorkbook();
     
@@ -60,12 +70,15 @@ abstract class Builder {
     protected void writeOnSheet(ResultSet rs, Workbook workbook, Sheet sheet) throws Exception {
         int rownum = 0;
         int cellnum = 0;
+        
         Row row = sheet.createRow(rownum++);
         
         if(header == null) {
             header = defaultHeader(workbook);
         }
-
+        
+        formatHeader(sheet);
+        
         ResultSetMetaData rsmd = rs.getMetaData();
         for (int i = 1; i <= rsmd.getColumnCount(); i++) {
             Cell cell = row.createCell(cellnum++);
@@ -73,6 +86,8 @@ abstract class Builder {
             cell.setCellStyle(header);
         }
 
+        formatHeader(sheet);
+        
         DataFormat fmt = workbook.createDataFormat();
 
         CellStyle dateStyle = workbook.createCellStyle();
@@ -129,7 +144,9 @@ abstract class Builder {
         Field[] fields = list.get(0).getClass().getDeclaredFields();
         int rownum = 0, cellnum = 0;
         Row row = sheet.createRow(rownum++);
-
+        
+        formatHeader(sheet);
+        
         for (Field f : fields) {
             Cell cell = row.createCell(cellnum++);
             try {
@@ -145,6 +162,8 @@ abstract class Builder {
             }
         }
 
+        
+        
         NumberFormat numberFormat = NumberFormat.getInstance(new Locale("pt", "BR"));
         for (T obj : list) {
             cellnum = 0;
@@ -179,6 +198,72 @@ abstract class Builder {
                 }
             }
         }
+    }
+    
+    
+    private void formatHeader(Sheet sheet) {
+//        sheet.setColumnWidth(13, PixelUtil.pixel2WidthUnits(190));
+        Row row = sheet.getRow(0);
+        if(headerHeight != 0) {
+            row.setHeightInPoints(headerHeight);
+        }
+        
+        if (autosizeAll) {
+            int c = row.getPhysicalNumberOfCells();
+            for (int i = 0; i < c; i++)
+                autosizableColumns.add(i);
+        } 
+        if (!autosizableColumns.isEmpty()) {
+            for (int c : autosizableColumns)
+                sheet.autoSizeColumn(c);
+        }
+        
+//        Cell cell = row.getCell(14);
+        if (!columnsWidth.isEmpty()) {
+            for (Map.Entry<Integer, Integer> columnsWidth : columnsWidth.entrySet()) {
+                sheet.setColumnWidth(columnsWidth.getKey(), PixelUtil.pixel2WidthUnits(columnsWidth.getValue()));
+            }
+        }
+    }
+
+    public boolean isAutosizeAll() {
+        return autosizeAll;
+    }
+
+    public void setAutosizeAll(boolean autosizeAll) {
+        this.autosizeAll = autosizeAll;
+    }
+
+    public List<Integer> getAutosizableColumns() {
+        return autosizableColumns;
+    }
+
+    public void setAutosizableColumns(List<Integer> autosizableColumns) {
+        this.autosizableColumns = autosizableColumns;
+    }
+
+    public void addAutosizableColumn(int column) {
+        this.autosizableColumns.add(column);
+    }
+    
+    public Map<Integer, Integer> getColumnsWidth() {
+        return columnsWidth;
+    }
+
+    public void setColumnsWidth(Map<Integer, Integer> columnsWidth) {
+        this.columnsWidth = columnsWidth;
+    }
+    
+    public void addColumnWidth(int column, int width) {
+        this.columnsWidth.put(column, width);
+    }
+
+    public Integer getHeaderHeight() {
+        return headerHeight;
+    }
+
+    public void setHeaderHeight(Integer headerHeight) {
+        this.headerHeight = headerHeight;
     }
     
 }

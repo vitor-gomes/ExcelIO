@@ -10,6 +10,7 @@ import java.util.List;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -38,7 +39,16 @@ class XLSXBuilder extends Builder {
     @Override
     public <T> void addSheet(String sheetName, List<T> list) {
         try {
-            super.writeOnSheet(list, sxssfw, sxssfw.createSheet(sheetName));
+            SXSSFSheet sheet = sxssfw.createSheet(sheetName);
+            
+            // Adding tracking for autosizable columns for XSSF Workbooks.
+            if(super.isAutosizeAll()) {
+                sheet.trackAllColumnsForAutoSizing();
+            } else if (!super.autosizableColumns.isEmpty()) {
+                sheet.trackColumnsForAutoSizing(super.autosizableColumns);
+            }
+            
+            super.writeOnSheet(list, sxssfw, sheet);
         } catch (Exception ex) {
             ex.printStackTrace();
         } 
