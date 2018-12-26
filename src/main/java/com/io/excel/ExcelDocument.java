@@ -59,9 +59,24 @@ public class ExcelDocument {
     }
     
     /**
+     * Autosizes all columns by the header width.
+     * <p>
+     * Defaults to false.
+     * <p>
+     * Avoid using this and autosizeAll for marginal performance boost
+     */
+    public void autosizeHeader() {
+        builder.setAutosizeHeader(true);
+    }
+    
+    /**
      * WARNING: This can may result in great slowdown for large sheets!
      * <p>
      * Autosizes all columns.
+     * <p>
+     * Defaults to false.
+     * <p>
+     * Avoid using this and autosizeAll for marginal performance boost
      */
     public void autosizeAll() {
         builder.setAutosizeAll(true);

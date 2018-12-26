@@ -42,7 +42,7 @@ class XLSXBuilder extends Builder {
             SXSSFSheet sheet = sxssfw.createSheet(sheetName);
             
             // Adding tracking for autosizable columns for XSSF Workbooks.
-            if(super.isAutosizeAll()) {
+            if(super.isAutosizeAll() || super.isAutosizeHeader()) {
                 sheet.trackAllColumnsForAutoSizing();
             } else if (!super.autosizableColumns.isEmpty()) {
                 sheet.trackColumnsForAutoSizing(super.autosizableColumns);

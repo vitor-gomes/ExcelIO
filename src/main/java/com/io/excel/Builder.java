@@ -32,6 +32,7 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.streaming.SXSSFSheet;
 
 /**
  *
@@ -42,6 +43,7 @@ abstract class Builder {
     protected CellStyle header;
     
     protected Boolean autosizeAll = false;
+    protected Boolean autosizeHeader = false;
     protected List<Integer> autosizableColumns = new ArrayList();
     protected Map<Integer, Integer> columnsWidth = new HashMap();
     protected Integer headerHeight = 0; // 0 == default
@@ -76,8 +78,6 @@ abstract class Builder {
         if(header == null) {
             header = defaultHeader(workbook);
         }
-        
-        formatHeader(sheet);
         
         ResultSetMetaData rsmd = rs.getMetaData();
         for (int i = 1; i <= rsmd.getColumnCount(); i++) {
@@ -127,11 +127,13 @@ abstract class Builder {
                         if(!(object instanceof java.util.Collection)) {
                             Object o = rs.getObject(i);
                             cell.setCellValue(o.toString());
-                            break;
                         }
                 }
             }
         }
+        
+        if (autosizeAll)
+            autosize(sheet);
     }
     
     protected <T> void writeOnSheet(List<T> list, Workbook workbook, Sheet sheet) throws Exception {
@@ -144,8 +146,6 @@ abstract class Builder {
         Field[] fields = list.get(0).getClass().getDeclaredFields();
         int rownum = 0, cellnum = 0;
         Row row = sheet.createRow(rownum++);
-        
-        formatHeader(sheet);
         
         for (Field f : fields) {
             Cell cell = row.createCell(cellnum++);
@@ -162,7 +162,7 @@ abstract class Builder {
             }
         }
 
-        
+        formatHeader(sheet);
         
         NumberFormat numberFormat = NumberFormat.getInstance(new Locale("pt", "BR"));
         for (T obj : list) {
@@ -198,34 +198,48 @@ abstract class Builder {
                 }
             }
         }
+        
+        if (autosizeAll)
+            autosize(sheet);
     }
     
+    private void autosize(Sheet sheet) {
+        for (int c : autosizableColumns) 
+                sheet.autoSizeColumn(c);
+    }
     
     private void formatHeader(Sheet sheet) {
-//        sheet.setColumnWidth(13, PixelUtil.pixel2WidthUnits(190));
         Row row = sheet.getRow(0);
-        if(headerHeight != 0) {
+        if(headerHeight != 0) 
             row.setHeightInPoints(headerHeight);
-        }
         
-        if (autosizeAll) {
+        if (autosizeHeader || autosizeAll) {
             int c = row.getPhysicalNumberOfCells();
-            for (int i = 0; i < c; i++)
+            for (int i = 0; i < c; i++) 
                 autosizableColumns.add(i);
         } 
-        if (!autosizableColumns.isEmpty()) {
-            for (int c : autosizableColumns)
-                sheet.autoSizeColumn(c);
+        if (autosizeHeader) {
+            autosize(sheet);
+        }
+        if (!autosizeAll && sheet instanceof SXSSFSheet) {
+            SXSSFSheet sXSSFSheet = (SXSSFSheet) sheet;
+            sXSSFSheet.untrackAllColumnsForAutoSizing();
         }
         
-//        Cell cell = row.getCell(14);
         if (!columnsWidth.isEmpty()) {
-            for (Map.Entry<Integer, Integer> columnsWidth : columnsWidth.entrySet()) {
-                sheet.setColumnWidth(columnsWidth.getKey(), PixelUtil.pixel2WidthUnits(columnsWidth.getValue()));
-            }
+            for (Map.Entry<Integer, Integer> columnWidth : columnsWidth.entrySet()) 
+                sheet.setColumnWidth(columnWidth.getKey(), PixelUtil.pixel2WidthUnits(columnWidth.getValue()));
         }
     }
 
+    public void setAutosizeHeader(boolean autosizeHeader) {
+        this.autosizeHeader = autosizeHeader;
+    }
+    
+    public boolean isAutosizeHeader() {
+        return autosizeHeader;
+    }
+    
     public boolean isAutosizeAll() {
         return autosizeAll;
     }
