@@ -17,6 +17,7 @@ import java.lang.annotation.Target;
 @Target({ElementType.FIELD})
 public @interface ExcelColumn {
     String name() default "";
-    String columnDefinition() default "";
+    String[] columnDefinitions() default "";
     String index() default "";
+    // TODO: String validationMethod() default "";
 }

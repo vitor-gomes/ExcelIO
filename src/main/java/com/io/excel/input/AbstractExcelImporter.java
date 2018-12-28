@@ -1,5 +1,6 @@
 package com.io.excel.input;
 
+import com.io.excel.annotations.ExcelColumn;
 import com.monitorjbl.xlsx.StreamingReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -7,6 +8,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +18,12 @@ import java.util.Map;
 import java.util.TreeMap;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.hssf.util.CellReference;
 import org.apache.poi.poifs.filesystem.FileMagic;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
+import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -26,11 +35,13 @@ import org.apache.poi.ss.usermodel.Workbook;
 public abstract class AbstractExcelImporter {
     
     /**
+     * TODO
      * m_list deve ser utilizada como uma lista simples
      * onde a key Integer deve ser o número da linha
      */
     protected Map<Integer, Object> m_list = new TreeMap();
     /**
+     * TODO
      * m_map deve ser utilizada como um map, onde, por exemplo, a importação 
      * da base deve acumular valores presentes em múltiplas linhas.
      */
@@ -49,6 +60,7 @@ public abstract class AbstractExcelImporter {
     
     private File file;
     private Object fileObject;
+    private Class c;
     private FileItem fileItem;
     private InputStream uploadedStream;
     protected boolean success;
@@ -113,6 +125,16 @@ public abstract class AbstractExcelImporter {
     /**
      * TODO
      * @param fileObject
+     * @param outputDirPath 
+     */
+    public AbstractExcelImporter(Object fileObject, String outputDirPath, Class c) {
+        this(fileObject, outputDirPath, 0);
+        this.c = c;
+    }
+    
+    /**
+     * TODO
+     * @param fileObject
      * @param outputDirPath
      * @param headersize 
      */
@@ -129,6 +151,18 @@ public abstract class AbstractExcelImporter {
      */
     public AbstractExcelImporter(Object fileObject, String outputDirPath, int rowCache, int bufferSize) {
         this(fileObject, outputDirPath, rowCache, bufferSize,0);
+    }
+    
+    /**
+     * TODO
+     * @param fileObject
+     * @param outputDirPath
+     * @param rowCache
+     * @param bufferSize 
+     */
+    public AbstractExcelImporter(Object fileObject, String outputDirPath, int rowCache, int bufferSize, Class c) {
+        this(fileObject, outputDirPath, rowCache, bufferSize,0);
+        this.c = c;
     }
     
     /**
@@ -325,11 +359,9 @@ public abstract class AbstractExcelImporter {
     }
     
     private void handleSheet(Sheet sheet, int sheetNo) {
-        int lineNo = 0;
-                
         try {
             for (Row r : sheet) {
-                lineNo++;
+                int lineNo =  r.getRowNum()+1;
 
                 if (header && lineNo == 1) {
                     if (headerSize != 0 && headerSize != r.getLastCellNum())
@@ -339,10 +371,15 @@ public abstract class AbstractExcelImporter {
                     }
                 }
 
-                handleRow(r, lineNo);
+                //TODO if Class c -> automaticallyHandleRow
+                if (c != null)
+                    automaticallyHandleRow(r, lineNo);
+                else
+                    handleRow(r, lineNo);
 
             }
         } catch (Exception e) {
+            e.printStackTrace();
             errors.add(e.getMessage());
         }
     }
@@ -359,6 +396,83 @@ public abstract class AbstractExcelImporter {
      * @return boolean indicação de falha ou sucesso no processamento.
      */
     public abstract boolean handleRow(Row r, int lineNo);
+    
+    /**
+     * TODO
+     * @return 
+     */
+    protected boolean automaticallyHandleRow(Row row, int lineNo) throws Exception {
+        Class<?> clazz = Class.forName(c.getName());
+        Field[] fields = c.getDeclaredFields();
+        
+        
+        Constructor<?> constructor = clazz.getConstructor();
+        Object object = constructor.newInstance(new Object[] {  });
+        
+        DataFormatter formatter = new DataFormatter();
+        
+        for (Field field : fields) {
+            ExcelColumn column = field.getAnnotation(ExcelColumn.class);
+            if (column != null) {
+                String colString = field.getAnnotation(ExcelColumn.class).index();
+                int index = CellReference.convertColStringToIndex(colString);
+                Cell cell = row.getCell(index);
+                Object objField = null;
+                if (cell != null) {
+                    String fieldClassName = field.getType().getSimpleName();
+                    switch (fieldClassName) {
+                        case "Integer":
+                        case "int":
+                            objField = Integer.parseInt(formatter.formatCellValue(cell).trim());
+                            break;
+                        case "Double":
+                        case "double":
+                            objField = Double.parseDouble(formatter.formatCellValue(cell).trim());
+                            break;
+                        case "String":
+                            objField = formatter.formatCellValue(cell).trim();
+                            break;
+                        case "Date":
+                            if ( cell.getCellTypeEnum() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell))
+                                objField = cell.getDateCellValue();
+                            else {
+                                String[] colPatterns = field.getAnnotation(ExcelColumn.class).columnDefinitions();
+                                
+                                if (colPatterns == null || colPatterns.length == 0)
+                                    throw(new Exception("ColumnDefinition de um campo Date (" + field.getName() + ") de coluna não numérica (" + colString + ") não definido!"));
+                                
+                                for (String colPattern : colPatterns) {
+                                    if (objField == null) {
+                                        try {
+                                            SimpleDateFormat dateFormatter = new SimpleDateFormat(colPattern);
+                                            objField = dateFormatter.parse(cell.getStringCellValue());
+                                        } catch(Exception e) {}
+                                    }
+                                }
+                                
+                                if (objField == null)
+                                    throw(new Exception("Não foi possível parsear um campo Date (" + field.getName() + ") de uma coluna não numérica (" + colString + ") com os ColumnDefinitions passados!"));
+                            }
+                            break;
+                        default:
+                            throw(new Exception("Não foi possível formatar a célula " + colString + cell.getAddress().getRow() + ", tipo de campo (" + fieldClassName + ") não suportado!"));
+                    }
+                }
+                field.setAccessible(true);
+                
+                // TODO validation and conversion
+                field.set(object, objField);
+                
+                field.setAccessible(false);
+            }
+        }
+        
+        // TODO: automatic validation throws error
+        m_list.put(lineNo, object);
+        
+        
+        return true;
+    }    
     
     /**
      * TODO

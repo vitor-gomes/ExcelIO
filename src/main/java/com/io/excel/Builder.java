@@ -190,7 +190,7 @@ abstract class Builder {
                         case "java.util.Date":
                             ExcelColumn column = f.getAnnotation(ExcelColumn.class);
                             try {
-                                String pattern = column.columnDefinition();
+                                String pattern = column.columnDefinitions()[0];
                                 SimpleDateFormat frmt = new SimpleDateFormat(pattern);
                                 c.setCellValue(frmt.format(o));
                             } catch(Exception e) {
