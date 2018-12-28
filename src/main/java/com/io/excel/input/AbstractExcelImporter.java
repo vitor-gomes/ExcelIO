@@ -60,21 +60,86 @@ public abstract class AbstractExcelImporter {
         HSSF_WORKBOOK, XSSF_WORKBOOK, INVALID
     }
     
+    
+    /**
+     * TODO
+     * @param path 
+     */
+    public AbstractExcelImporter(String path) {
+        this(path, 0);
+    }
+    
+    /**
+     * TODO
+     * @param path
+     * @param headersize 
+     */
     public AbstractExcelImporter(String path, int headersize) {
-        this(null, null, headersize, F_ROWCACHE, F_BUFFERSIZE);
+        this(null, null, F_ROWCACHE, F_BUFFERSIZE, headersize);
         this.file = new File(path);
     }
     
-    public AbstractExcelImporter(String path, int headersize, int bufferSize, int rowCache) {
-        this(null, null, headersize, rowCache, bufferSize);
+    /**
+     * TODO
+     * @param path
+     * @param bufferSize
+     * @param rowCache 
+     */
+    public AbstractExcelImporter(String path, int bufferSize, int rowCache) {
+        this(path, rowCache, bufferSize, 0);
+    }
+    
+    /**
+     * TODO
+     * @param path
+     * @param rowCache
+     * @param bufferSize
+     * @param headersize 
+     */
+    public AbstractExcelImporter(String path, int rowCache, int bufferSize, int headersize) {
+        this(null, null, rowCache, bufferSize, headersize);
         this.file = new File(path);
     }
     
+    /**
+     * TODO
+     * @param fileObject
+     * @param outputDirPath 
+     */
+    public AbstractExcelImporter(Object fileObject, String outputDirPath) {
+        this(fileObject, outputDirPath, 0);
+    }
+    
+    /**
+     * TODO
+     * @param fileObject
+     * @param outputDirPath
+     * @param headersize 
+     */
     public AbstractExcelImporter(Object fileObject, String outputDirPath, int headersize) {
-        this(fileObject, outputDirPath, headersize, F_ROWCACHE, F_BUFFERSIZE);
+        this(fileObject, outputDirPath, F_ROWCACHE, F_BUFFERSIZE, headersize);
     }
     
-    public AbstractExcelImporter(Object fileObject, String outputDirPath, int headersize, int bufferSize, int rowCache) {
+    /**
+     * TODO
+     * @param fileObject
+     * @param outputDirPath
+     * @param rowCache
+     * @param bufferSize 
+     */
+    public AbstractExcelImporter(Object fileObject, String outputDirPath, int rowCache, int bufferSize) {
+        this(fileObject, outputDirPath, rowCache, bufferSize,0);
+    }
+    
+    /**
+     * TODO
+     * @param fileObject
+     * @param outputDirPath
+     * @param rowCache
+     * @param bufferSize
+     * @param headersize 
+     */
+    public AbstractExcelImporter(Object fileObject, String outputDirPath, int rowCache, int bufferSize, int headersize) {
         this.rowCache = rowCache;
         this.bufferSize = bufferSize;
         this.headerSize = headersize;
@@ -82,7 +147,7 @@ public abstract class AbstractExcelImporter {
         this.outputDirPath = outputDirPath;
         try {
             if (fileObject != null & outputDirPath != null) {
-                realizaUpload();
+                upload();
                 success = true;
             }
         } catch (Exception e) {
@@ -92,7 +157,7 @@ public abstract class AbstractExcelImporter {
         }
     }
     
-    private void realizaUpload() throws Exception {
+    private void upload() throws Exception {
         fileItem = (FileItem) fileObject;
         String fileName = fileItem.getName();
         
@@ -111,9 +176,9 @@ public abstract class AbstractExcelImporter {
                         //TODO: set errors string elsewhere!!!!
                         throw(new Exception("Invalid file!"));
                     case HSSF_WORKBOOK:
-                        escreveXLS(path);
+                        writeXLS(path);
                     case XSSF_WORKBOOK:
-                        escreveXLSX(path);
+                        writeXLSX(path);
                         break;
                 }
             
@@ -127,6 +192,7 @@ public abstract class AbstractExcelImporter {
     }
     
     /**
+     * TODO
      * Método de escrita do arquivo em disco.
      * <p>
      * Este método escreve o arquivo XLS em disco.
@@ -136,11 +202,12 @@ public abstract class AbstractExcelImporter {
      * @param path caminho completo do arquivo a ser escrito
      * @throws Exception 
      */
-    protected void escreveXLS(String path) throws Exception {
-        escreve(path);
+    protected void writeXLS(String path) throws Exception {
+        write(path);
     }
     
     /**
+     * TODO
      * Método de escrita do arquivo em disco.
      * <p>
      * Este método escreve o arquivo XLSX em disco.
@@ -150,11 +217,11 @@ public abstract class AbstractExcelImporter {
      * @param path caminho completo do arquivo a ser escrito
      * @throws Exception 
      */
-    protected void escreveXLSX(String path) throws Exception {
-        escreve(path);
+    protected void writeXLSX(String path) throws Exception {
+        write(path);
     }
     
-    private void escreve(String path) throws Exception {
+    private void write(String path) throws Exception {
         
         file = new File(path);
         final int TAM_BUFF = (8 * 1024);
@@ -170,6 +237,7 @@ public abstract class AbstractExcelImporter {
     }
     
     /**
+     * TODO
      * Método de importação dos dados do Excel
      * <p>
      * Método que deve ser chamado caso após a chamada ao construtor, o método 
@@ -178,7 +246,7 @@ public abstract class AbstractExcelImporter {
      * @return boolean importação da base feita com sucesso
      * @throws Exception 
      */
-    public boolean importa() throws Exception {
+    public boolean importFile() throws Exception {
         
         try {
             
@@ -189,10 +257,10 @@ public abstract class AbstractExcelImporter {
             
             switch(type) {
                 case HSSF_WORKBOOK:
-                    importaXLS();
+                    importXLS();
                     break;
                 case XSSF_WORKBOOK:
-                    importaXLSX();
+                    importXLSX();
                     break;
                 case INVALID:
                     success = false;
@@ -200,7 +268,7 @@ public abstract class AbstractExcelImporter {
                     return success;
             }
             
-            success = processaRows();
+            success = handleRows();
             
         } catch (Exception e) { 
             success = false;
@@ -210,7 +278,7 @@ public abstract class AbstractExcelImporter {
         return success;
     }
 
-    protected void importaXLSX() throws Exception {
+    protected void importXLSX() throws Exception {
         
         try (
                 Workbook workbook = StreamingReader.builder()
@@ -219,12 +287,12 @@ public abstract class AbstractExcelImporter {
                     .open(file);   
              ) {
             
-            importaExcel(workbook);
+            importExcel(workbook);
             
         }
     }
     
-    protected void importaXLS() throws Exception {
+    protected void importXLS() throws Exception {
         
         try (
                 FileInputStream fileIS = new FileInputStream(file);
@@ -232,31 +300,31 @@ public abstract class AbstractExcelImporter {
             
             Workbook workbook = new HSSFWorkbook(fileIS);
             
-            importaExcel(workbook);
+            importExcel(workbook);
             
         }
         
     }
     
-    private void importaExcel(Workbook workbook) throws Exception {
+    private void importExcel(Workbook workbook) throws Exception {
         
         if (singleSheet && workbook.getNumberOfSheets() > 1) 
             throw new Exception("O arquivo deve conter apenas uma Sheet.");
 
         if (firstSheetOnly) {
             Sheet sheet = workbook.getSheetAt(0);
-            trataSheet(sheet, 1);
+            handleSheet(sheet, 1);
         } else {
             int sheetNo = 1;
             for (Sheet sheet : workbook) {
-               trataSheet(sheet, sheetNo); 
+               handleSheet(sheet, sheetNo); 
                sheetNo++;
             }
         }
             
     }
     
-    private void trataSheet(Sheet sheet, int sheetNo) {
+    private void handleSheet(Sheet sheet, int sheetNo) {
         int lineNo = 0;
                 
         try {
@@ -264,14 +332,14 @@ public abstract class AbstractExcelImporter {
                 lineNo++;
 
                 if (header && lineNo == 1) {
-                    if (headerSize != r.getLastCellNum())
+                    if (headerSize != 0 && headerSize != r.getLastCellNum())
                         throw new Exception("A sheet #" + sheetNo + " não possui o número correto de colunas (" + headerSize + " colunas)!");
                     else {
                         continue;
                     }
                 }
 
-                trataRow(r, lineNo);
+                handleRow(r, lineNo);
 
             }
         } catch (Exception e) {
@@ -280,6 +348,7 @@ public abstract class AbstractExcelImporter {
     }
     
     /**
+     * TODO
      * Implementação do tratamento de uma linha do Excel.
      * <p>
      * Implementar método que popula os campos List e/ou Map para posterior 
@@ -289,9 +358,10 @@ public abstract class AbstractExcelImporter {
      * @param lineNo número da linha sendo processada (utilizada para tratamento de erros).
      * @return boolean indicação de falha ou sucesso no processamento.
      */
-    public abstract boolean trataRow(Row r, int lineNo);
+    public abstract boolean handleRow(Row r, int lineNo);
     
     /**
+     * TODO
      * Implementação do processamento dos objetos que representam as rows.
      * <p>
      * Implementar método que itera os campos List e/ou Map para escrita 
@@ -303,7 +373,7 @@ public abstract class AbstractExcelImporter {
      * <p>
      * @return boolean indicação de falha ou sucesso no processamento.
      */
-    public abstract boolean  processaRows();
+    public abstract boolean  handleRows();
     
     private TYPE defineType(InputStream inp) throws IOException {
         try {
