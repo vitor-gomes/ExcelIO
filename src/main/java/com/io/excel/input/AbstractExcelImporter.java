@@ -405,7 +405,6 @@ public abstract class AbstractExcelImporter {
         Class<?> clazz = Class.forName(c.getName());
         Field[] fields = c.getDeclaredFields();
         
-        
         Constructor<?> constructor = clazz.getConstructor();
         Object object = constructor.newInstance(new Object[] {  });
         
@@ -418,8 +417,22 @@ public abstract class AbstractExcelImporter {
                 int index = CellReference.convertColStringToIndex(colString);
                 Cell cell = row.getCell(index);
                 Object objField = null;
+                
+                String fieldClassName = field.getType().getSimpleName();
+                String fullyQualifiedClassName = field.getType().getCanonicalName();
+                
+                String subclassFieldName = column.subclassField();
+                if(subclassFieldName != null && !subclassFieldName.equals("")) {
+                    Class<?> subClazz = Class.forName(fullyQualifiedClassName);
+                    Field[] subFields = subClazz.getDeclaredFields();
+                    for (Field subField : subFields) {
+                        if (subField.getName().equals(subclassFieldName)) {
+                            fieldClassName = subField.getType().getSimpleName();
+                        }
+                    }
+                }
+                
                 if (cell != null) {
-                    String fieldClassName = field.getType().getSimpleName();
                     switch (fieldClassName) {
                         case "Integer":
                         case "int":
@@ -460,8 +473,26 @@ public abstract class AbstractExcelImporter {
                 }
                 field.setAccessible(true);
                 
-                // TODO validation and conversion
-                field.set(object, objField);
+                // TODO validation of Field with reflection
+                
+                if(subclassFieldName != null && !subclassFieldName.equals("")) {
+                    Class<?> subClazz = Class.forName(fullyQualifiedClassName);
+                    Field[] subFields = subClazz.getDeclaredFields();
+                    
+                    Constructor<?> subClassConstructor = subClazz.getConstructor();
+                    Object subObject = subClassConstructor.newInstance(new Object[] {  });
+                    
+                    
+                    for (Field subField : subFields) {
+                        if (subField.getName().equals(subclassFieldName)) {
+                            subField.setAccessible(true);
+                            subField.set(subObject, objField);
+                            subField.setAccessible(true);
+                        }
+                    }
+                    field.set(object, subObject);
+                }
+                else field.set(object, objField);
                 
                 field.setAccessible(false);
             }

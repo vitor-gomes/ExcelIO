@@ -19,5 +19,7 @@ public @interface ExcelColumn {
     String name() default "";
     String[] columnDefinitions() default "";
     String index() default "";
+    String subclassField() default "";
     // TODO: String validationMethod() default "";
+    // TODO: boolean interruptiveValidation() default false;
 }
