@@ -6,7 +6,7 @@
 package com.io.excel;
 
 import com.io.excel.annotations.ExcelColumn;
-import com.io.excel.utils.PixelUtil;
+import com.io.excel.utils.PixelUtils;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -245,7 +245,7 @@ abstract class Builder {
         
         if (!columnsWidth.isEmpty()) {
             for (Map.Entry<Integer, Integer> columnWidth : columnsWidth.entrySet()) 
-                sheet.setColumnWidth(columnWidth.getKey(), PixelUtil.pixel2WidthUnits(columnWidth.getValue()));
+                sheet.setColumnWidth(columnWidth.getKey(), PixelUtils.pixel2WidthUnits(columnWidth.getValue()));
         }
     }
 

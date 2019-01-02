@@ -1,6 +1,7 @@
 package com.io.excel.input;
 
 import com.io.excel.annotations.ExcelColumn;
+import com.io.excel.utils.CellUtils;
 import com.monitorjbl.xlsx.StreamingReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -364,14 +365,13 @@ public abstract class AbstractExcelImporter {
                 int lineNo =  r.getRowNum()+1;
 
                 if (header && lineNo == 1) {
-                    if (headerSize != 0 && headerSize != r.getLastCellNum())
+                    if (headerSize != 0 && headerSize != r.getLastCellNum()) {
                         throw new Exception("A sheet #" + sheetNo + " não possui o número correto de colunas (" + headerSize + " colunas)!");
-                    else {
+                    } else {
                         continue;
                     }
                 }
 
-                //TODO if Class c -> automaticallyHandleRow
                 if (c != null)
                     automaticallyHandleRow(r, lineNo);
                 else
@@ -380,6 +380,7 @@ public abstract class AbstractExcelImporter {
             }
         } catch (Exception e) {
             e.printStackTrace();
+            success100percent = false;
             errors.add(e.getMessage());
         }
     }
@@ -408,7 +409,7 @@ public abstract class AbstractExcelImporter {
         Constructor<?> constructor = clazz.getConstructor();
         Object object = constructor.newInstance(new Object[] {  });
         
-        DataFormatter formatter = new DataFormatter();
+        
         
         for (Field field : fields) {
             ExcelColumn column = field.getAnnotation(ExcelColumn.class);
@@ -436,36 +437,17 @@ public abstract class AbstractExcelImporter {
                     switch (fieldClassName) {
                         case "Integer":
                         case "int":
-                            objField = Integer.parseInt(formatter.formatCellValue(cell).trim());
+                            objField = CellUtils.getCellIntValue(cell, field);
                             break;
                         case "Double":
                         case "double":
-                            objField = Double.parseDouble(formatter.formatCellValue(cell).trim());
+                            objField = CellUtils.getCellDoubleValue(cell, field);
                             break;
                         case "String":
-                            objField = formatter.formatCellValue(cell).trim();
+                            objField = CellUtils.getCellStringValue(cell, field);
                             break;
                         case "Date":
-                            if ( cell.getCellTypeEnum() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell))
-                                objField = cell.getDateCellValue();
-                            else {
-                                String[] colPatterns = field.getAnnotation(ExcelColumn.class).columnDefinitions();
-                                
-                                if (colPatterns == null || colPatterns.length == 0)
-                                    throw(new Exception("ColumnDefinition de um campo Date (" + field.getName() + ") de coluna não numérica (" + colString + ") não definido!"));
-                                
-                                for (String colPattern : colPatterns) {
-                                    if (objField == null) {
-                                        try {
-                                            SimpleDateFormat dateFormatter = new SimpleDateFormat(colPattern);
-                                            objField = dateFormatter.parse(cell.getStringCellValue());
-                                        } catch(Exception e) {}
-                                    }
-                                }
-                                
-                                if (objField == null)
-                                    throw(new Exception("Não foi possível parsear um campo Date (" + field.getName() + ") de uma coluna não numérica (" + colString + ") com os ColumnDefinitions passados!"));
-                            }
+                            objField = CellUtils.getCellDateValue(cell, field);
                             break;
                         default:
                             throw(new Exception("Não foi possível formatar a célula " + colString + cell.getAddress().getRow() + ", tipo de campo (" + fieldClassName + ") não suportado!"));
