@@ -44,7 +44,28 @@ public class CellUtils {
     
     public static int getCellIntValue(Cell cell, Field field)  throws Exception {
         try {
-            return Integer.parseInt(DF.formatCellValue(cell).replaceAll(".", "").replaceAll(",", "").trim());
+            if (cell.getCellTypeEnum() == CellType.STRING) {
+                if (cell.getStringCellValue() == null || cell.getStringCellValue().isEmpty()) {
+                    /**
+                     * TODO:
+                     * if (mandatory) {
+                     *      if (nullable) return Cell.CELL_TYPE_BLANK;
+                     *      else throw new Exception("Blank mandatory value");
+                     * } else {
+                     *      if (nullable) return Cell.CELL_TYPE_BLANK;
+                     *      else return (defaultValue.equals("") ? 0 : Double.parseDouble(defaultValue));
+                     * }
+                     */
+                    return 0;
+                } else {                    
+                    return NumberFormat
+                            .getInstance(LOCALE)
+                            .parse(cell.getStringCellValue())
+                            .intValue();
+                }
+            } else {
+                return Integer.parseInt(DF.formatCellValue(cell).replaceAll("\\.", "").replaceAll(",", "").trim());
+            }
         } catch(Exception e) {
             throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() + cell.getAddress().getRow() + ", valor não é um inteiro!"));
         }
@@ -54,6 +75,16 @@ public class CellUtils {
         try {
             if (cell.getCellTypeEnum() == CellType.STRING) {
                 if (cell.getStringCellValue() == null || cell.getStringCellValue().isEmpty()) {
+                    /**
+                     * TODO:
+                     * if (mandatory) {
+                     *      if (nullable) return Cell.CELL_TYPE_BLANK;
+                     *      else throw new Exception("Blank mandatory value");
+                     * } else {
+                     *      if (nullable) return Cell.CELL_TYPE_BLANK;
+                     *      else return (defaultValue.equals("") ? 0 : Double.parseDouble(defaultValue));
+                     * }
+                     */
                     return 0;
                 } else {                    
                     return NumberFormat
@@ -72,6 +103,10 @@ public class CellUtils {
     public static String getCellStringValue(Cell cell, Field field)  throws Exception {
         try {
             if (cell == null) {
+                /**
+                 * TODO:
+                 * return (nullable ? null : "");
+                 */
                 return null;
             }
 
