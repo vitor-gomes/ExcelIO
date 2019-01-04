@@ -21,8 +21,6 @@ public @interface ExcelColumn {
     String[] columnDefinitions() default "";
     String index() default "";
     String subclassField() default "";
-    // TODO: String validationMethod() default "";
-    // TODO: boolean interruptiveValidation() default false;
     
     class ColumnComparator implements Comparator<String>
     {

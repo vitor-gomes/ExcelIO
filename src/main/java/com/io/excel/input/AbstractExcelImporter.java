@@ -11,10 +11,10 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import org.apache.commons.fileupload.FileItem;
@@ -22,9 +22,6 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.CellReference;
 import org.apache.poi.poifs.filesystem.FileMagic;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellType;
-import org.apache.poi.ss.usermodel.DataFormatter;
-import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
@@ -68,6 +65,8 @@ public abstract class AbstractExcelImporter {
     protected boolean success100percent = true;
     protected List<String> errors = new ArrayList<>();
     private TYPE type;
+    
+    protected Locale locale = new Locale("en", "US");
     
     public enum TYPE {
         HSSF_WORKBOOK, XSSF_WORKBOOK, INVALID
@@ -441,7 +440,7 @@ public abstract class AbstractExcelImporter {
                             break;
                         case "Double":
                         case "double":
-                            objField = CellUtils.getCellDoubleValue(cell, field);
+                            objField = CellUtils.getCellDoubleValue(cell, field, locale);
                             break;
                         case "String":
                             objField = CellUtils.getCellStringValue(cell, field);
@@ -578,6 +577,14 @@ public abstract class AbstractExcelImporter {
     
     public void setNoHeader() {
         this.header = false;
+    }
+
+    /**
+     * TODO
+     * @param LOCALE 
+     */
+    public void setLocale(Locale locale) {
+        this.locale = locale;
     }
     
 }

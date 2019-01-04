@@ -3,7 +3,6 @@ package com.io.excel.utils;
 import com.io.excel.annotations.ExcelColumn;
 import java.lang.reflect.Field;
 import java.text.NumberFormat;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
@@ -18,8 +17,6 @@ import org.apache.poi.ss.usermodel.DateUtil;
  */
 public class CellUtils {
     
-    // TODO configurable Locale
-    public static final Locale LOCALE = new Locale("pt", "BR");
     public static final DataFormatter DF = new DataFormatter();
     
     public static Date getCellDateValue(Cell cell, Field field) throws Exception {
@@ -59,7 +56,7 @@ public class CellUtils {
                     return 0;
                 } else {                    
                     return NumberFormat
-                            .getInstance(LOCALE)
+                            .getInstance()
                             .parse(cell.getStringCellValue())
                             .intValue();
                 }
@@ -71,7 +68,7 @@ public class CellUtils {
         }
     }
     
-    public static double getCellDoubleValue(Cell cell, Field field)  throws Exception {
+    public static double getCellDoubleValue(Cell cell, Field field, Locale locale)  throws Exception {
         try {
             if (cell.getCellTypeEnum() == CellType.STRING) {
                 if (cell.getStringCellValue() == null || cell.getStringCellValue().isEmpty()) {
@@ -88,7 +85,7 @@ public class CellUtils {
                     return 0;
                 } else {                    
                     return NumberFormat
-                            .getInstance(LOCALE)
+                            .getInstance(locale)
                             .parse(cell.getStringCellValue())
                             .doubleValue();
                 }
