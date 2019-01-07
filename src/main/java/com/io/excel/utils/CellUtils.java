@@ -62,7 +62,7 @@ public class CellUtils {
                 return Integer.parseInt(DF.formatCellValue(cell).replaceAll("\\.", "").replaceAll(",", "").trim());
             }
         } catch (Exception e) {
-            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() + cell.getAddress().getRow() + ", valor não é um inteiro!"));
+            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é um inteiro!"));
         } 
     }
     
@@ -84,13 +84,13 @@ public class CellUtils {
                 return Integer.parseInt(DF.formatCellValue(cell).replaceAll("\\.", "").replaceAll(",", "").trim());
             }
         } catch(Exception e) {
-            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() + cell.getAddress().getRow() + ", valor não é um inteiro!"));
+            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é um inteiro!"));
         }
     }
     
     public static Double getCellDoubleValue(Cell cell, Field field, Locale locale)  throws Exception {
         try {
-            if (cell.getCellTypeEnum() == CellType.STRING) {
+            if (cell != null && cell.getCellTypeEnum() != CellType.BLANK && cell.getCellTypeEnum() == CellType.STRING) {
                 if (cell.getStringCellValue() == null || cell.getStringCellValue().isEmpty()) {
                     if (field.getAnnotation(ExcelColumn.class).nullable())
                         return null;
@@ -100,17 +100,38 @@ public class CellUtils {
                         else
                             throw(new Exception());
                     }
-                } else {                    
+                } else { 
+                    // Checar parseamento de strings vazias!!! TESTAR!
+                    
+                    if ((cell.getStringCellValue() == null || cell.getStringCellValue().equals("")) && !field.getAnnotation(ExcelColumn.class).nullable())
+                        throw(new Exception());
+                    
+                    if (cell.getStringCellValue() == null || cell.getStringCellValue().equals(""))
+                            return null;
+                    
                     return NumberFormat
                             .getInstance(locale)
                             .parse(cell.getStringCellValue())
                             .doubleValue();
                 }
             } else {
-                return cell.getNumericCellValue();
+                if (cell == null || cell.getCellTypeEnum() == CellType.BLANK) {
+                    if (!field.getAnnotation(ExcelColumn.class).nullable()) {
+                        if (field.getAnnotation(ExcelColumn.class).defaultValue().equals(""))
+                            throw(new Exception());
+                        else
+                            return NumberFormat.getInstance(locale).parse(field.getAnnotation(ExcelColumn.class).defaultValue()).doubleValue();
+                    } else {
+                        if (field.getAnnotation(ExcelColumn.class).defaultValue().equals(""))
+                            return null;
+                        else
+                            return NumberFormat.getInstance(locale).parse(field.getAnnotation(ExcelColumn.class).defaultValue()).doubleValue();
+                    }
+                } else
+                    return cell.getNumericCellValue();
             }
         } catch (Exception e) {
-            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() + cell.getAddress().getRow() + ", valor não é numérico!"));
+            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é numérico!"));
         } 
     }
     
@@ -122,17 +143,26 @@ public class CellUtils {
                         return NumberFormat.getInstance(locale).parse(field.getAnnotation(ExcelColumn.class).defaultValue()).doubleValue();
                     else
                         throw(new Exception());
-                } else {                    
+                } else {      
+                    if ((cell.getStringCellValue() == null || cell.getStringCellValue().equals("")) && !field.getAnnotation(ExcelColumn.class).nullable())
+                        throw(new Exception());
+                    
                     return NumberFormat
                             .getInstance(locale)
                             .parse(cell.getStringCellValue())
                             .doubleValue();
                 }
             } else {
-                return cell.getNumericCellValue();
+                if (cell == null || cell.getCellTypeEnum() == CellType.BLANK) {
+                    if (!field.getAnnotation(ExcelColumn.class).nullable() && field.getAnnotation(ExcelColumn.class).defaultValue().equals("")) {
+                        throw(new Exception());
+                    } else
+                        return NumberFormat.getInstance(locale).parse(field.getAnnotation(ExcelColumn.class).defaultValue()).doubleValue();
+                } else
+                    return cell.getNumericCellValue();
             }
         } catch (Exception e) {
-            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() + cell.getAddress().getRow() + ", valor não é numérico!"));
+            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é numérico!"));
         } 
     }
     
@@ -182,7 +212,7 @@ public class CellUtils {
                 return Boolean.parseBoolean(value);
             }
         } catch(Exception e) {
-            throw new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() + cell.getAddress().getRow() + ", valor não é um booleano!");
+            throw new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é um booleano!");
         }
     }
 
@@ -214,7 +244,7 @@ public class CellUtils {
                 return Boolean.parseBoolean(value);
             }
         } catch(Exception e) {
-            throw new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() + cell.getAddress().getRow() + ", valor não é um booleano!");
+            throw new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é um booleano!");
         }
     }
     

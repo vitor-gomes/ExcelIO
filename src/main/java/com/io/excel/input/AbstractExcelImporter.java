@@ -373,13 +373,21 @@ public abstract class AbstractExcelImporter {
                     }
                 }
 
-                if (c != null)
-                    automaticallyHandleRow(r, lineNo);
-                else
-                    handleRow(r, lineNo);
+                try {
+                    if (c != null)
+                        automaticallyHandleRow(r, lineNo);
+                    else
+                        handleRow(r, lineNo);
+                }  catch (Exception e) {
+                    // Error for specific line
+                    e.printStackTrace();
+                    success100percent = false;
+                    errors.add(e.getMessage());
+                }
 
             }
         } catch (Exception e) {
+            // Error for the whole process.
             e.printStackTrace();
             success100percent = false;
             errors.add(e.getMessage());
