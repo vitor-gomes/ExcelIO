@@ -21,6 +21,8 @@ public @interface ExcelColumn {
     String[] columnDefinitions() default "";
     String index() default "";
     String subclassField() default "";
+    boolean nullable() default true;
+    String defaultValue() default "";
     
     class ColumnComparator implements Comparator<String>
     {

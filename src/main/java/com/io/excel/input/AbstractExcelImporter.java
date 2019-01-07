@@ -66,6 +66,8 @@ public abstract class AbstractExcelImporter {
     protected List<String> errors = new ArrayList<>();
     private TYPE type;
     
+    protected Map<String, Boolean> booleanMap  = null;
+    
     protected Locale locale = new Locale("en", "US");
     
     public enum TYPE {
@@ -435,12 +437,22 @@ public abstract class AbstractExcelImporter {
                 if (cell != null) {
                     switch (fieldClassName) {
                         case "Integer":
+                            objField = CellUtils.getCellIntegerValue(cell, field);
+                            break;
                         case "int":
                             objField = CellUtils.getCellIntValue(cell, field);
                             break;
                         case "Double":
-                        case "double":
                             objField = CellUtils.getCellDoubleValue(cell, field, locale);
+                            break;
+                        case "double":
+                            objField = CellUtils.getCellDoublePrimitiveValue(cell, field, locale);
+                            break;
+                        case "Boolean":
+                            objField = CellUtils.getCellBooleanValue(cell, field, booleanMap);
+                            break;
+                        case "boolean":
+                            objField = CellUtils.getCellBooleanPrimitiveValue(cell, field, booleanMap);
                             break;
                         case "String":
                             objField = CellUtils.getCellStringValue(cell, field);
@@ -585,6 +597,14 @@ public abstract class AbstractExcelImporter {
      */
     public void setLocale(Locale locale) {
         this.locale = locale;
+    }
+
+    /**
+     * TODO
+     * @param booleanMap 
+     */
+    public void setBooleanMap(Map<String, Boolean> booleanMap) {
+        this.booleanMap = booleanMap;
     }
     
 }
