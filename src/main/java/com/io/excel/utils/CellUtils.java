@@ -101,8 +101,6 @@ public class CellUtils {
                             throw(new Exception());
                     }
                 } else { 
-                    // Checar parseamento de strings vazias!!! TESTAR!
-                    
                     if ((cell.getStringCellValue() == null || cell.getStringCellValue().equals("")) && !field.getAnnotation(ExcelColumn.class).nullable())
                         throw(new Exception());
                     
@@ -137,7 +135,7 @@ public class CellUtils {
     
     public static double getCellDoublePrimitiveValue(Cell cell, Field field, Locale locale)  throws Exception {
         try {
-            if (cell.getCellTypeEnum() == CellType.STRING) {
+            if (cell != null && cell.getCellTypeEnum() != CellType.BLANK && cell.getCellTypeEnum() == CellType.STRING) {
                 if (cell.getStringCellValue() == null || cell.getStringCellValue().isEmpty()) {
                     if (!field.getAnnotation(ExcelColumn.class).defaultValue().equals(""))
                         return NumberFormat.getInstance(locale).parse(field.getAnnotation(ExcelColumn.class).defaultValue()).doubleValue();
