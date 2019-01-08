@@ -5,7 +5,8 @@
  */
 package com.io.excel;
 
-import com.io.excel.utils.PixelUtil;
+import com.io.excel.annotations.ExcelColumn;
+import com.io.excel.utils.PixelUtils;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
@@ -18,7 +19,6 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import javax.persistence.Column;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -148,11 +148,11 @@ abstract class Builder {
         for (Field f : fields) {
             Cell cell = row.createCell(cellnum++);
             try {
-                Column column = f.getAnnotation(Column.class);
-                if (column == null) {
-                    cell.setCellValue(f.getName());
-                } else {
+                ExcelColumn column = f.getAnnotation(ExcelColumn.class);
+                if (column != null && !column.name().equals("")) {
                     cell.setCellValue(column.name());
+                } else {
+                    cell.setCellValue(f.getName());
                 }
                 cell.setCellStyle(header);
             } catch (java.lang.NoClassDefFoundError e) {
@@ -188,10 +188,14 @@ abstract class Builder {
                 } else {
                     switch (t.getTypeName()) {
                         case "java.util.Date":
-                            Column column = f.getAnnotation(Column.class);
-                            String pattern = column.columnDefinition();
-                            SimpleDateFormat frmt = new SimpleDateFormat(pattern);
-                            c.setCellValue(frmt.format(o));
+                            ExcelColumn column = f.getAnnotation(ExcelColumn.class);
+                            try {
+                                String pattern = column.columnDefinitions()[0];
+                                SimpleDateFormat frmt = new SimpleDateFormat(pattern);
+                                c.setCellValue(frmt.format(o));
+                            } catch(Exception e) {
+                                c.setCellValue(o.toString());
+                            }
                             c.setCellStyle(dateStyle);
                             break;
                         case "java.lang.Integer":
@@ -241,7 +245,7 @@ abstract class Builder {
         
         if (!columnsWidth.isEmpty()) {
             for (Map.Entry<Integer, Integer> columnWidth : columnsWidth.entrySet()) 
-                sheet.setColumnWidth(columnWidth.getKey(), PixelUtil.pixel2WidthUnits(columnWidth.getValue()));
+                sheet.setColumnWidth(columnWidth.getKey(), PixelUtils.pixel2WidthUnits(columnWidth.getValue()));
         }
     }
 

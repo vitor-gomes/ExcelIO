@@ -14,12 +14,12 @@ public class GenericExcelImporter extends AbstractExcelImporter {
     }
 
     @Override
-    public boolean trataRow(Row r, int lineNo) {
+    public boolean handleRow(Row r, int lineNo) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
 
     @Override
-    public boolean processaRows() {
+    public boolean handleRows() {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
     }
     
