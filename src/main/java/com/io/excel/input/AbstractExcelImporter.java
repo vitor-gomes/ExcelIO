@@ -16,7 +16,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.Set;
 import java.util.TreeMap;
+import javax.validation.ConstraintViolation;
 import org.apache.commons.fileupload.FileItem;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hssf.util.CellReference;
@@ -25,6 +28,7 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
+import javax.validation.Validator;
 
 /**
  *
@@ -66,9 +70,23 @@ public abstract class AbstractExcelImporter {
     protected List<String> errors = new ArrayList<>();
     private TYPE type;
     
+    /**
+     * TODO
+     */
     protected Map<String, Boolean> booleanMap  = null;
     
+    /**
+     * TODO
+     */
     protected Locale locale = new Locale("en", "US");
+    /**
+     * TODO
+     */
+    protected Validator validator;
+    /**
+     * TODO
+     */
+    protected ResourceBundle bundle;
     
     public enum TYPE {
         HSSF_WORKBOOK, XSSF_WORKBOOK, INVALID
@@ -445,36 +463,35 @@ public abstract class AbstractExcelImporter {
                 if (cell != null) {
                     switch (fieldClassName) {
                         case "Integer":
-                            objField = CellUtils.getCellIntegerValue(cell, field);
+                            objField = CellUtils.getCellIntegerValue(cell, field, bundle);
                             break;
                         case "int":
-                            objField = CellUtils.getCellIntValue(cell, field);
+                            objField = CellUtils.getCellIntValue(cell, field, bundle);
                             break;
                         case "Double":
-                            objField = CellUtils.getCellDoubleValue(cell, field, locale);
+                            objField = CellUtils.getCellDoubleValue(cell, field, locale, bundle);
                             break;
                         case "double":
-                            objField = CellUtils.getCellDoublePrimitiveValue(cell, field, locale);
+                            objField = CellUtils.getCellDoublePrimitiveValue(cell, field, locale, bundle);
                             break;
                         case "Boolean":
-                            objField = CellUtils.getCellBooleanValue(cell, field, booleanMap);
+                            objField = CellUtils.getCellBooleanValue(cell, field, booleanMap, bundle);
                             break;
                         case "boolean":
-                            objField = CellUtils.getCellBooleanPrimitiveValue(cell, field, booleanMap);
+                            objField = CellUtils.getCellBooleanPrimitiveValue(cell, field, booleanMap, bundle);
                             break;
                         case "String":
-                            objField = CellUtils.getCellStringValue(cell, field);
+                            objField = CellUtils.getCellStringValue(cell, field, bundle);
                             break;
                         case "Date":
-                            objField = CellUtils.getCellDateValue(cell, field);
+                            objField = CellUtils.getCellDateValue(cell, field, bundle);
                             break;
                         default:
-                            throw(new Exception("Não foi possível formatar a célula " + colString + cell.getAddress().getRow() + ", tipo de campo (" + fieldClassName + ") não suportado!"));
+                            throw(new Exception("Não foi possível formatar a célula " + colString + cell.getAddress().getRow() + 
+                                    ", tipo de campo (" + com.io.excel.utils.StringUtils.getString(fieldClassName, bundle) + ") não suportado!"));
                     }
                 }
                 field.setAccessible(true);
-                
-                // TODO validation of Field with reflection
                 
                 if(subclassFieldName != null && !subclassFieldName.equals("")) {
                     Class<?> subClazz = Class.forName(fullyQualifiedClassName);
@@ -499,7 +516,17 @@ public abstract class AbstractExcelImporter {
             }
         }
         
-        // TODO: automatic validation throws error
+        if(validator != null) {
+            Set<ConstraintViolation<Object>> validationErrors = validator.validate(object);
+            if (!validationErrors.isEmpty()) {
+                for (ConstraintViolation<Object> error : validationErrors) {
+                    errors.add("Erro lendo a linha #" + lineNo + ": " + com.io.excel.utils.StringUtils.getString(error.getMessage(), bundle));
+                    success100percent = false;
+                }
+                return false;
+            }
+        }
+        
         m_list.put(lineNo, object);
         
         
@@ -601,7 +628,7 @@ public abstract class AbstractExcelImporter {
 
     /**
      * TODO
-     * @param LOCALE 
+     * @param locale 
      */
     public void setLocale(Locale locale) {
         this.locale = locale;
@@ -613,6 +640,22 @@ public abstract class AbstractExcelImporter {
      */
     public void setBooleanMap(Map<String, Boolean> booleanMap) {
         this.booleanMap = booleanMap;
+    }
+
+    /**
+     * TODO
+     * @param validator 
+     */
+    public void setValidator(Validator validator) {
+        this.validator = validator;
+    }
+
+    /**
+     * TODO
+     * @param bundle 
+     */
+    public void setBundle(ResourceBundle bundle) {
+        this.bundle = bundle;
     }
     
 }

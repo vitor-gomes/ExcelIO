@@ -7,6 +7,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DataFormatter;
@@ -20,14 +21,15 @@ public class CellUtils {
     
     public static final DataFormatter DF = new DataFormatter();
     
-    public static Date getCellDateValue(Cell cell, Field field) throws Exception {
+    public static Date getCellDateValue(Cell cell, Field field, ResourceBundle bundle) throws Exception {
         String[] colPatterns = field.getAnnotation(ExcelColumn.class).columnDefinitions();
         String colString = field.getAnnotation(ExcelColumn.class).index();
         if ( cell.getCellTypeEnum() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell))
             return cell.getDateCellValue();
         else {
             if (colPatterns == null || colPatterns.length == 0)
-                throw(new Exception("ColumnDefinition de um campo Date (" + field.getName() + ") de coluna não numérica (" + colString + ") não definido!"));
+                throw(new Exception("ColumnDefinition de um campo Date (" + com.io.excel.utils.StringUtils.getString(field.getAnnotation(ExcelColumn.class).name(), bundle) 
+                        + ") de célula não numérica (" + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ") não definido!"));
 
             for (String colPattern : colPatterns) {
                 try {
@@ -36,11 +38,12 @@ public class CellUtils {
                 } catch(Exception e) {}
             }
             
-            throw(new Exception("Não foi possível parsear um campo Date (" + field.getName() + ") de uma coluna não numérica (" + colString + ") com os ColumnDefinitions passados!"));
+            throw(new Exception("Não foi possível parsear um campo Date (" + com.io.excel.utils.StringUtils.getString(field.getAnnotation(ExcelColumn.class).name(), bundle) + 
+                    ") de uma célula não numérica (" + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ") com os ColumnDefinitions passados!"));
         }
     }
     
-    public static Integer getCellIntegerValue(Cell cell, Field field)  throws Exception {
+    public static Integer getCellIntegerValue(Cell cell, Field field, ResourceBundle bundle)  throws Exception {
         try {
             if (cell.getCellTypeEnum() == CellType.STRING) {
                 if (cell.getStringCellValue() == null || cell.getStringCellValue().isEmpty()) {
@@ -66,7 +69,7 @@ public class CellUtils {
         } 
     }
     
-    public static int getCellIntValue(Cell cell, Field field)  throws Exception {
+    public static int getCellIntValue(Cell cell, Field field, ResourceBundle bundle)  throws Exception {
         try {
             if (cell.getCellTypeEnum() == CellType.STRING) {
                 if (cell.getStringCellValue() == null || cell.getStringCellValue().isEmpty()) {
@@ -88,7 +91,7 @@ public class CellUtils {
         }
     }
     
-    public static Double getCellDoubleValue(Cell cell, Field field, Locale locale)  throws Exception {
+    public static Double getCellDoubleValue(Cell cell, Field field, Locale locale, ResourceBundle bundle)  throws Exception {
         try {
             if (cell != null && cell.getCellTypeEnum() != CellType.BLANK && cell.getCellTypeEnum() == CellType.STRING) {
                 if (cell.getStringCellValue() == null || cell.getStringCellValue().isEmpty()) {
@@ -133,7 +136,7 @@ public class CellUtils {
         } 
     }
     
-    public static double getCellDoublePrimitiveValue(Cell cell, Field field, Locale locale)  throws Exception {
+    public static double getCellDoublePrimitiveValue(Cell cell, Field field, Locale locale, ResourceBundle bundle)  throws Exception {
         try {
             if (cell != null && cell.getCellTypeEnum() != CellType.BLANK && cell.getCellTypeEnum() == CellType.STRING) {
                 if (cell.getStringCellValue() == null || cell.getStringCellValue().isEmpty()) {
@@ -164,7 +167,7 @@ public class CellUtils {
         } 
     }
     
-    public static String getCellStringValue(Cell cell, Field field)  throws Exception {
+    public static String getCellStringValue(Cell cell, Field field, ResourceBundle bundle)  throws Exception {
         try {
             if (cell == null) {
                 return (field.getAnnotation(ExcelColumn.class).nullable() ? null : field.getAnnotation(ExcelColumn.class).defaultValue());
@@ -177,7 +180,7 @@ public class CellUtils {
         }
     }
 
-    public static Boolean getCellBooleanValue(Cell cell, Field field, Map<String, Boolean> booleanMap)  throws Exception {
+    public static Boolean getCellBooleanValue(Cell cell, Field field, Map<String, Boolean> booleanMap, ResourceBundle bundle)  throws Exception {
         try {
             if (cell.getCellTypeEnum() == CellType.BOOLEAN) 
                 return cell.getBooleanCellValue();
@@ -214,7 +217,7 @@ public class CellUtils {
         }
     }
 
-    public static boolean getCellBooleanPrimitiveValue(Cell cell, Field field, Map<String, Boolean> booleanMap)  throws Exception {
+    public static boolean getCellBooleanPrimitiveValue(Cell cell, Field field, Map<String, Boolean> booleanMap, ResourceBundle bundle)  throws Exception {
         try {
             if (cell.getCellTypeEnum() == CellType.BOOLEAN) 
                 return cell.getBooleanCellValue();
