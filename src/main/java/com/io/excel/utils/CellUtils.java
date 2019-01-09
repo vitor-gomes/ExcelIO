@@ -23,24 +23,41 @@ public class CellUtils {
     
     public static Date getCellDateValue(Cell cell, Field field, ResourceBundle bundle) throws Exception {
         String[] colPatterns = field.getAnnotation(ExcelColumn.class).columnDefinitions();
-        String colString = field.getAnnotation(ExcelColumn.class).index();
         if ( cell.getCellTypeEnum() == CellType.NUMERIC && DateUtil.isCellDateFormatted(cell))
             return cell.getDateCellValue();
         else {
-            if (colPatterns == null || colPatterns.length == 0)
+            if (colPatterns == null || colPatterns.length == 0) {
                 throw(new Exception("ColumnDefinition de um campo Date (" + com.io.excel.utils.StringUtils.getString(field.getAnnotation(ExcelColumn.class).name(), bundle) 
-                        + ") de célula não numérica (" + field.getAnnotation(ExcelColumn.class).index() +   (cell.getRowIndex()+1) + ") não definido!"));
-
-            for (String colPattern : colPatterns) {
-                try {
-                    SimpleDateFormat dateFormatter = new SimpleDateFormat(colPattern);
-                    return dateFormatter.parse(cell.getStringCellValue());
-                } catch(Exception e) {}
+                    + ") de célula não numérica (" + field.getAnnotation(ExcelColumn.class).index() +   (cell.getRowIndex()+1) + ") não definido!"));
+            } else {
+                if (cell.getStringCellValue() == null || cell.getStringCellValue().equals("")) {
+                    if (!field.getAnnotation(ExcelColumn.class).defaultValue().equals("")) {
+                        for (String colPattern : colPatterns) {
+                            try {
+                                SimpleDateFormat dateFormatter = new SimpleDateFormat(colPattern);
+                                return dateFormatter.parse(field.getAnnotation(ExcelColumn.class).defaultValue());
+                            } catch(Exception e) {}
+                        }
+                    }
+                    
+                    if (field.getAnnotation(ExcelColumn.class).nullable())
+                        return null;
+                    
+                } else {
+                    
+                    for (String colPattern : colPatterns) {
+                        try {
+                            SimpleDateFormat dateFormatter = new SimpleDateFormat(colPattern);
+                            return dateFormatter.parse(cell.getStringCellValue());
+                        } catch(Exception e) {}
+                    }
+                    
+                }
+                
             }
-            
+        }   
             throw(new Exception("Não foi possível parsear um campo Date (" + com.io.excel.utils.StringUtils.getString(field.getAnnotation(ExcelColumn.class).name(), bundle) + 
                     ") de uma célula não numérica (" + field.getAnnotation(ExcelColumn.class).index() +   (cell.getRowIndex()+1) + ") com os ColumnDefinitions passados!"));
-        }
     }
     
     public static Integer getCellIntegerValue(Cell cell, Field field, ResourceBundle bundle)  throws Exception {
