@@ -29,7 +29,7 @@ public class CellUtils {
         else {
             if (colPatterns == null || colPatterns.length == 0)
                 throw(new Exception("ColumnDefinition de um campo Date (" + com.io.excel.utils.StringUtils.getString(field.getAnnotation(ExcelColumn.class).name(), bundle) 
-                        + ") de célula não numérica (" + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ") não definido!"));
+                        + ") de célula não numérica (" + field.getAnnotation(ExcelColumn.class).index() +   (cell.getRowIndex()+1) + ") não definido!"));
 
             for (String colPattern : colPatterns) {
                 try {
@@ -39,7 +39,7 @@ public class CellUtils {
             }
             
             throw(new Exception("Não foi possível parsear um campo Date (" + com.io.excel.utils.StringUtils.getString(field.getAnnotation(ExcelColumn.class).name(), bundle) + 
-                    ") de uma célula não numérica (" + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ") com os ColumnDefinitions passados!"));
+                    ") de uma célula não numérica (" + field.getAnnotation(ExcelColumn.class).index() +   (cell.getRowIndex()+1) + ") com os ColumnDefinitions passados!"));
         }
     }
     
@@ -65,7 +65,7 @@ public class CellUtils {
                 return Integer.parseInt(DF.formatCellValue(cell).replaceAll("\\.", "").replaceAll(",", "").trim());
             }
         } catch (Exception e) {
-            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é um inteiro!"));
+            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getRowIndex()+1) + ", valor não é um inteiro!"));
         } 
     }
     
@@ -87,7 +87,7 @@ public class CellUtils {
                 return Integer.parseInt(DF.formatCellValue(cell).replaceAll("\\.", "").replaceAll(",", "").trim());
             }
         } catch(Exception e) {
-            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é um inteiro!"));
+            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() + (cell.getRowIndex()+1) + ", valor não é um inteiro!"));
         }
     }
     
@@ -132,7 +132,7 @@ public class CellUtils {
                     return cell.getNumericCellValue();
             }
         } catch (Exception e) {
-            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é numérico!"));
+            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getRowIndex()+1) + ", valor não é numérico!"));
         } 
     }
     
@@ -163,7 +163,7 @@ public class CellUtils {
                     return cell.getNumericCellValue();
             }
         } catch (Exception e) {
-            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é numérico!"));
+            throw(new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getRowIndex()+1) + ", valor não é numérico!"));
         } 
     }
     
@@ -213,7 +213,7 @@ public class CellUtils {
                 return Boolean.parseBoolean(value);
             }
         } catch(Exception e) {
-            throw new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é um booleano!");
+            throw new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getRowIndex()+1) + ", valor não é um booleano!");
         }
     }
 
@@ -245,7 +245,7 @@ public class CellUtils {
                 return Boolean.parseBoolean(value);
             }
         } catch(Exception e) {
-            throw new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getAddress().getRow()+1) + ", valor não é um booleano!");
+            throw new Exception("Não foi possível formatar a célula " + field.getAnnotation(ExcelColumn.class).index() +   (cell.getRowIndex()+1) + ", valor não é um booleano!");
         }
     }
     

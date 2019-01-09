@@ -487,7 +487,7 @@ public abstract class AbstractExcelImporter {
                             objField = CellUtils.getCellDateValue(cell, field, bundle);
                             break;
                         default:
-                            throw(new Exception("Não foi possível formatar a célula " + colString + cell.getAddress().getRow() + 
+                            throw(new Exception("Não foi possível formatar a célula " + colString + (cell.getRowIndex()+1)  + 
                                     ", tipo de campo (" + com.io.excel.utils.StringUtils.getString(fieldClassName, bundle) + ") não suportado!"));
                     }
                 }
