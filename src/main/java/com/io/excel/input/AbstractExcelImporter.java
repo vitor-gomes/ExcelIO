@@ -325,9 +325,10 @@ public abstract class AbstractExcelImporter {
             success = handleRows();
             
         } catch (Exception e) { 
+            e.printStackTrace();
+            success100percent = false;
             success = false;
             errors.add(e.getMessage());
-            throw e;
         }
         return success;
     }
